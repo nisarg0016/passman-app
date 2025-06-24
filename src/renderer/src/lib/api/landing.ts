@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-async function login(username: string, password: string, otp: string = "000000", twofa: boolean = false): Promise<undefined> {
+async function login(username: string, password: string, otp: string = "000000", twofa: boolean = false): Promise<{ twoFAverif: boolean, loginSuccess: boolean, response: any }> {
     return new Promise(async (resolve, reject) => {
         if (twofa) {
             const data = {

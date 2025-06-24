@@ -1,7 +1,12 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
-  "include": ["src/renderer/**/*.ts", "src/preload/*.d.ts"],
+  "include": ["vite.config.ts", "src/main/**/*", "src/preload/**/*","src/renderer/**/*.ts", "src/renderer/**/*.tsx",],
   "compilerOptions": {
-    "composite": true
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/src/*"]
+    },
+    "moduleResolution": "bundler"
   }
 }

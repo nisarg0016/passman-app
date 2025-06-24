@@ -1,5 +1,5 @@
 import { AlertCircleIcon } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
     Card,
@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/card'
 import { useState } from 'react'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ModeToggle } from '@/components/ui/mode-toggle'
 import { Input } from '@/components/ui/input'
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'

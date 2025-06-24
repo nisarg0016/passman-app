@@ -1,6 +1,5 @@
 import { Login } from '@/views/login'
 import { Dashboard } from '@/views/dashboard'
-import { ModeToggle } from '@/components/ui/mode-toggle'
 import { useState } from 'react'
 
 function App() {

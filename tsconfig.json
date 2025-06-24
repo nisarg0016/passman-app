@@ -1,5 +1,5 @@
 {
-  "files": [],
+  "include": ["vite.config.ts", "src/main/**/*", "src/preload/**/*","src/renderer/**/*.ts", "src/renderer/**/*.tsx",],
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }],
   "compilerOptions": {
     "composite": true,
