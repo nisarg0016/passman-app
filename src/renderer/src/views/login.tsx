@@ -1,3 +1,4 @@
+import React from 'react'
 import { AlertCircleIcon } from 'lucide-react'
 import { Alert, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -10,18 +11,67 @@ import {
     CardHeader,
     CardTitle
 } from '@/components/ui/card'
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
+} from '@/components/ui/form'
 import { useState } from 'react'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Input } from '@/components/ui/input'
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { login, register } from '@/lib/api/landing'
+import { login, register, vaultFetch } from '@/lib/api/landing'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { toast, Toaster } from 'sonner'
 
 type LoginProps = {
     setView: (view: string) => void
 }
 
+const FormSchema = z.object({
+    pin: z.string().min(6, {
+        message: 'Your one-time password must be 6 characters.'
+    })
+})
+
 function Login({ setView }: LoginProps) {
+    const form = useForm<z.infer<typeof FormSchema>>({
+        resolver: zodResolver(FormSchema),
+        defaultValues: {
+            pin: ""
+        }
+    })
+    async function onSubmit(data: z.infer<typeof FormSchema>) {
+        await login(username, pass, data.pin, true)
+            .then(async (retVal) => {
+                console.log(retVal)
+                if (retVal.loginSuccess == true) {
+                    const token = retVal.response.token
+                    console.log(token)
+                    await vaultFetch(username, token).then((vault) => {
+                        console.log(vault)
+                        setView('dashboard')
+                        setPass('')
+                    }).catch((e) => {
+                        console.log(e)
+                    })
+                }
+            })
+            .catch((e) => {
+                toast('My first toast')
+                console.log(e)
+                setError({
+                    b: true,
+                    message: e.response.error
+                })
+            })
+    }
     const [username, setName] = useState('')
     const [pass, setPass] = useState('')
     const [repass, set2Pass] = useState('')
@@ -31,50 +81,56 @@ function Login({ setView }: LoginProps) {
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <Toaster className="justify-center"/>
             {twofa == true && (
                 <Card className="w-sm">
                     <CardContent className="grid justify-center gap-5">
-                        <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS}>
-                            <InputOTPGroup>
-                                <InputOTPSlot index={0} />
-                                <InputOTPSlot index={1} />
-                                <InputOTPSlot index={2} />
-                            </InputOTPGroup>
-                            <InputOTPSeparator />
-                            <InputOTPGroup>
-                                <InputOTPSlot index={3} />
-                                <InputOTPSlot index={4} />
-                                <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                        </InputOTP>
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)}>
+                                <FormField
+                                    control={form.control}
+                                    name="pin"
+                                    render={({ field }) => (
+                                        <FormItem className="gap-4">
+                                            <FormLabel className="justify-center">
+                                                One-Time Password
+                                            </FormLabel>
+                                            <FormControl>
+                                                <InputOTP
+                                                    maxLength={6}
+                                                    pattern={REGEXP_ONLY_DIGITS}
+                                                    {...field}
+                                                >
+                                                    <InputOTPGroup>
+                                                        <InputOTPSlot index={0} />
+                                                        <InputOTPSlot index={1} />
+                                                        <InputOTPSlot index={2} />
+                                                    </InputOTPGroup>
+                                                    <InputOTPSeparator />
+                                                    <InputOTPGroup>
+                                                        <InputOTPSlot index={3} />
+                                                        <InputOTPSlot index={4} />
+                                                        <InputOTPSlot index={5} />
+                                                    </InputOTPGroup>
+                                                </InputOTP>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
-                        {loginError.b == true && (
-                            <Alert variant="destructive">
-                                <AlertCircleIcon />
-                                <AlertTitle>Unable to login. {loginError.message}</AlertTitle>
-                            </Alert>
-                        )}
+                                {loginError.b == true && (
+                                    <Alert variant="destructive">
+                                        <AlertCircleIcon />
+                                        <AlertTitle>
+                                            Unable to login. {loginError.message}
+                                        </AlertTitle>
+                                    </Alert>
+                                )}
 
-                        <Button
-                            type="submit"
-                            onClick={async () => {
-                                await login(username, pass)
-                                    .then((retVal) => {
-                                        if (retVal.loginSuccess == true) {
-                                            if (retVal.twoFAverif == true) set2fa(true)
-                                            else setView('dashboard')
-                                        }
-                                    })
-                                    .catch((e) => {
-                                        setError({
-                                            b: true,
-                                            message: e.response.error
-                                        })
-                                    })
-                            }}
-                        >
-                            Login
-                        </Button>
+                                <Button type="submit">Login</Button>
+                            </form>
+                        </Form>
                     </CardContent>
                 </Card>
             )}
@@ -94,6 +150,10 @@ function Login({ setView }: LoginProps) {
                                 variant="ghost"
                                 onClick={() => {
                                     setLoginRegister(!loginShow)
+                                    setError({
+                                        b: false,
+                                        message: ''
+                                    })
                                 }}
                             >
                                 {loginShow == true ? 'Sign Up' : 'Login'}
@@ -127,11 +187,19 @@ function Login({ setView }: LoginProps) {
                                             required
                                         />
                                     )}
-                                    {loginError.b == true && (
+                                    {loginError.b == true && loginShow == true && (
                                         <Alert variant="destructive">
                                             <AlertCircleIcon />
                                             <AlertTitle>
                                                 Unable to login. {loginError.message}
+                                            </AlertTitle>
+                                        </Alert>
+                                    )}
+                                    {loginError.b == true && loginShow == false && (
+                                        <Alert variant="destructive">
+                                            <AlertCircleIcon />
+                                            <AlertTitle>
+                                                Unable to register. {loginError.message}
                                             </AlertTitle>
                                         </Alert>
                                     )}
@@ -144,8 +212,18 @@ function Login({ setView }: LoginProps) {
                             <Button
                                 type="register"
                                 className="w-full"
-                                onClick={() => {
-                                    register(username, pass, repass)
+                                onClick={async () => {
+                                    await register(username, pass, repass)
+                                        .then((success) => {
+                                            if (success.code == 200) setLoginRegister(true)
+                                        })
+                                        .catch((e) => {
+                                            console.log(e)
+                                            setError({
+                                                b: true,
+                                                message: e.response.error
+                                            })
+                                        })
                                 }}
                             >
                                 Sign Up
@@ -156,19 +234,31 @@ function Login({ setView }: LoginProps) {
                                 className="w-full"
                                 onClick={async () => {
                                     await login(username, pass)
-                                        .then((retVal) => {
-                                            console.log(retVal)
+                                        .then(async (retVal) => {
                                             if (retVal.loginSuccess == true) {
                                                 if (retVal.twoFAverif == true) {
                                                     set2fa(true)
                                                     setError({
-                                                        b:false
+                                                        b: false
                                                     })
-                                                } else setView('dashboard')
+                                                } else {
+                                                    const token = retVal.response.token
+                                                    localStorage.setItem('token', token)
+                                                    localStorage.setItem('username', username)
+                                                    await vaultFetch(username, token).then((vault) => {
+                                                        setView('dashboard')
+                                                        setPass('')
+                                                        setName('')
+                                                    }).catch((e) => {
+                                                        setError({
+                                                            b: true,
+                                                            message: e.response.error
+                                                        })
+                                                    })
+                                                }
                                             }
                                         })
                                         .catch((e) => {
-                                            console.log(e)
                                             setError({
                                                 b: true,
                                                 message: e.response.error

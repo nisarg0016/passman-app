@@ -6,8 +6,8 @@ function App() {
     const [view, setView] = useState('login')
 
     return (
-        <div>
-            {view === 'login' && <Login setView={setView} />}
+        <div className="flex justify-center items-center">
+            {view === 'login' && <Login setView={setView}/>}
             {view === 'dashboard' && <Dashboard setView={setView} />}
         </div>
     )

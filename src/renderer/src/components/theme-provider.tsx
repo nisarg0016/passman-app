@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 type Theme = "dark" | "light" | "system"
 
 type ThemeProviderProps = {
+  className?: string
   children?: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
