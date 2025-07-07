@@ -24,7 +24,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Input } from '@/components/ui/input'
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp'
 import { REGEXP_ONLY_DIGITS } from 'input-otp'
-import { login, register, vaultFetch } from '@/lib/api/landing'
+import { login, register, vaultFetch, getUser } from '@/lib/api/landing'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -50,14 +50,18 @@ function Login({ setView }: LoginProps) {
     async function onSubmit(data: z.infer<typeof FormSchema>) {
         await login(username, pass, data.pin, true)
             .then(async (retVal) => {
-                console.log(retVal)
                 if (retVal.loginSuccess == true) {
                     const token = retVal.response.token
-                    console.log(token)
-                    await vaultFetch(username, token).then((vault) => {
-                        console.log(vault)
-                        setView('dashboard')
-                        setPass('')
+                    localStorage.setItem('token', token)
+                    await getUser(username, token).then(async () => {
+                        await vaultFetch(username, token).then(() => {
+                            setView('dashboard')
+                            setPass('')
+                            setName('')
+                            localStorage.setItem('view', 'dashboard')
+                        }).catch((e) => {
+                            console.log(e)
+                        })
                     }).catch((e) => {
                         console.log(e)
                     })
@@ -237,6 +241,8 @@ function Login({ setView }: LoginProps) {
                                         .then(async (retVal) => {
                                             if (retVal.loginSuccess == true) {
                                                 if (retVal.twoFAverif == true) {
+                                                    localStorage.setItem('twoFactorEnabled', 'true')
+                                                    localStorage.setItem('username', username)
                                                     set2fa(true)
                                                     setError({
                                                         b: false
@@ -245,10 +251,13 @@ function Login({ setView }: LoginProps) {
                                                     const token = retVal.response.token
                                                     localStorage.setItem('token', token)
                                                     localStorage.setItem('username', username)
-                                                    await vaultFetch(username, token).then((vault) => {
+                                                    await getUser(username, token)
+                                                    await vaultFetch(username, token).then(() => {
                                                         setView('dashboard')
+                                                        localStorage.setItem('view', 'dashboard')
                                                         setPass('')
                                                         setName('')
+                                                        localStorage.setItem('twoFactorEnabled', 'false')
                                                     }).catch((e) => {
                                                         setError({
                                                             b: true,

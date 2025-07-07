@@ -29,8 +29,7 @@ import {
     IconCircleCheckFilled,
     IconDotsVertical,
     IconGripVertical,
-    IconLayoutColumns,
-    IconPlus
+    IconLayoutColumns
 } from '@tabler/icons-react'
 import {
     ColumnDef,
@@ -92,7 +91,7 @@ import {
     TableHeader,
     TableRow
 } from '@/components/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 
 const SortableContext = OriginalSortableContext as React.ComponentType<any>
 
@@ -253,6 +252,13 @@ function DraggableRow({ row }: { key: string, row: Row<z.infer<typeof schema>> }
 
 export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[] }) {
     const [data, setData] = React.useState(() => initialData)
+    
+    // Sync internal data state with prop changes
+    React.useEffect(() => {
+        console.log('DataTable: initialData prop changed:', initialData)
+        setData(initialData)
+    }, [initialData])
+    
     const [rowSelection, setRowSelection] = React.useState({})
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])

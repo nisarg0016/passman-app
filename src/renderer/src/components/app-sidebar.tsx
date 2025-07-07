@@ -1,27 +1,20 @@
 import * as React from "react"
 import {
-  IconCamera,
-  IconChartBar,
   IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
   IconSearch,
   IconSettings,
-  IconUsers,
 } from "@tabler/icons-react"
 
 type LoginProps = {
     setView: (view: string) => void
 }
 
-import { NavDocuments } from "@/components/nav-documents"
+type AppSidebarProps = {
+    setView: LoginProps
+    refreshVaultData?: () => void
+}
+
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -35,61 +28,35 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    }
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
-
-export function AppSidebar({setView, ...props }: React.ComponentProps<typeof Sidebar> & { setView: LoginProps }) {
+export function AppSidebar({setView, refreshVaultData, ...props }: React.ComponentProps<typeof Sidebar> & AppSidebarProps) {
+  const data = {
+      user: {
+          name: localStorage.getItem('username') || 'Nisarg Desai',
+          email: localStorage.getItem('email') || 'hi@example.com',
+          avatar: localStorage.getItem('ppic') || '/avatars/shadcn.jpg'
+      },
+      navMain: [
+          {
+              title: 'Dashboard',
+              url: '#',
+              icon: IconDashboard,
+              function: () => {setView('dashboard')}
+          }
+      ],
+      navSecondary: [
+          {
+              title: 'Settings',
+              url: '#',
+              icon: IconSettings,
+              function: () => {setView('user')}
+          },
+          {
+              title: 'Search',
+              url: '#',
+              icon: IconSearch
+          }
+      ]
+  }
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -101,14 +68,14 @@ export function AppSidebar({setView, ...props }: React.ComponentProps<typeof Sid
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">Passman</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={data.navMain} setView={setView} refreshVaultData={refreshVaultData} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
